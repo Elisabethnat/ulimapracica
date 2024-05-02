@@ -1,0 +1,62 @@
+paths: 
+  /api/users/:
+    get:
+      summary: Obtener a todos los usuarios
+      tags:
+        - Users
+      responses:
+        '200':
+          description: Usuarios obtenidos 
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500': 
+          description: Error al traer usuarios
+  /api/users/{id}:
+    get:
+      summary: Obtener usuario por id
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $type: String
+          description: Id del usuario a buscar
+      responses:
+        '200':
+          description: Usuario obtenido ok
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/User'
+        '500': 
+          description: Error al traer usuarios
+components:
+  schemas:
+    User:
+      type: object
+      properties:  
+        _id:
+          type: ObjectId
+          description: Id autogenerado de MongoDb
+        first_name:
+          type: String
+          description: Apellido del Usuario
+        email:
+          type: String
+          description: Email del usuario
+        password:
+          type: String
+          description: Contraseña del usuario
+      example:
+        _id: ObjectId('1123asdasd12341d')
+        first_name: Pepe
+        last_name: Perez
+        email: pepe@pepe.com
+        password: 123123dasdad

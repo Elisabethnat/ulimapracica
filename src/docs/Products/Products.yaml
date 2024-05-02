@@ -1,0 +1,177 @@
+paths:
+  /api/products/:
+    get:
+      summary: Obtener todos los products
+      tags:
+        - Products
+      responses:
+        "200":
+          description: Productos obtenidos satisfactoriamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Products"
+        "400":
+          description: Error al consultar productos
+    post:
+      summary: Crear un producto nuevo
+      tags:
+        - Products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductsNoID"
+      responses:
+        "200":
+          description: Producto creado satisfactoriamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        "400":
+          description: Error al crear producto
+        "401":
+          description: User no autorizado
+        "403":
+          description: User no tiene los privilegios necesarios
+  /api/products/{id}:
+    get:
+      summary: Obtener un producto por id
+      tags:
+        - Products by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id del producto
+      responses:
+        "200":
+          description: Producto obtenido satisfactoriamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        "400":
+          description: Error al consultar producto
+    put:
+      summary: Actualizar un producto por id
+      tags:
+        - Products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Products"
+      responses:
+        "200":
+          description: Producto modificado satisfactoriamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        "400":
+          description: Error al crear producto
+        "401":
+          description: User no autorizado
+        "403":
+          description: User no tiene los privilegios necesarios
+    delete:
+      summary: Eliminar un producto por id
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id del producto
+      responses:
+        "200":
+          description: Producto eliminado satisfactoriamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        "400":
+          description: Error al eliminar producto
+        "401":
+          description: User no autorizado
+        "403":
+          description: User no tiene los privilegios necesarios
+
+components:
+  schemas:
+    Products:
+      type: object
+      properties:
+        _id:
+          type: ObjectId
+          description: Id autogenerado de MongoDB
+        title:
+          type: String
+          description: Nombre del producto
+        description:
+          type: String
+          description: Descripción del producto
+        price:
+          type: Number
+          description: Precio del producto
+        stock:
+          type: Number
+          description: Stock del producto
+        thumbnail:
+          type: String
+          description: Imagen del producto
+        code:
+          type: String
+          description: Código del producto
+        category:
+          type: String
+          description: Categoría del producto
+      example:
+        _id: ObjectId('31a3123f2313e')
+        title: Mate campo
+        description: Mate imperial
+        price: 11500
+        stock: 23
+        thumbnail: Sin imagen
+        code: 1231
+        category: Mates
+    ProductsNoID:
+      type: object
+      properties:
+        title:
+          type: String
+          description: Nombre del producto
+        description:
+          type: String
+          description: Descripción del producto
+        price:
+          type: Number
+          description: Precio del producto
+        stock:
+          type: Number
+          description: Stock del producto
+        thumbnail:
+          type: String
+          description: Imagen del producto
+        code:
+          type: String
+          description: Código del producto
+        category:
+          type: String
+          description: Categoría del producto
+      example:
+        title: Mate birola alpaca
+        description: Mate de calabaza
+        price: 11500
+        stock: 23
+        thumbnail: Sin imagen
+        code: 1231
+        category: "Mates"
