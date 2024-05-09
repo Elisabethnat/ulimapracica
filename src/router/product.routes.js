@@ -12,7 +12,7 @@ const productRouter = Router();
 //Ruta inicial de Products
 productRouter.get('/', productsController.getProducts);
 //Ruta para traer un producto según su ID
-productRouter.get('/:pid', productsController.getProduct);
+productRouter.get('/:pid', productsController.getProductById);
 //Mocking products
 productRouter.get('/mockingproducts', passportError('jwt'), authorization('Admin'), generateMockProducts)
 //Ruta para crear un producto

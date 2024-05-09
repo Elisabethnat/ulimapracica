@@ -38,7 +38,7 @@ const registerPost = async (req,res) => {
 
 
 const getCurrentSessions = async (req, res) => {
-  res.status(200).send(req.user);   
+    res.status(200).send({ mensaje: req.user });  
 };
 
 const getGithubCreateUser = async (req, res) => {

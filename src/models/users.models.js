@@ -30,7 +30,6 @@ const userSchema = new Schema({
     },
     age: {
         type: Number,
-        required: true,
     },
     cart: {
         type: Schema.Types.ObjectId,
@@ -42,15 +41,15 @@ const userSchema = new Schema({
                 type: String,
                 required: true,
             },
-            reference: {
+            reference: [{
                 type: String,
                 required: true,
-            }
+            }]
         }
     ],
     last_connection: {
         type: Date,
-        default: null
+        default: Date.now
     }
 });
 

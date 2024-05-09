@@ -5,6 +5,8 @@ import jwt from 'passport-jwt';
 import { createHash, validatePassword } from "../utils/bcrypt.js";
 import { userModel } from "../models/users.model.js";
 import 'dotenv/config.js';
+import {logger} from '../utils/logger.js';
+
 
  //Defino estrategia (los mensajes de error se manejan en la ruta, aca se ven los msj html )
  const LocalStrategy = local.Strategy;
@@ -14,29 +16,53 @@ import 'dotenv/config.js';
  //Función de mi estrategia
  const initializePassport = () => {
  
-   //opcion dada en clase
-   const cookiesExtractor = (req) => {
-      //{} no hay cookies != no exista mi cookie
-      //si existen cookies, consulte por mi cookie y sino asigno {}
-      const headerToken = req.headers ? req.headers.authorization : null;
-      const cookiesToken = req.cookies ? req.cookies.jwtCookie : null;
-      console.log("token cookie", cookiesToken);
-      console.log(headerToken)
-      return headerToken || cookiesToken || {};
-   };
-   //done es como si fuese un res.status(),el callback de respuesta. 
-    //Acá defino qué y en qué ruta voy a utilizar mi estrategia
-   passport.use('jwt', new JWTStrategy({
-      jwtFromRequest: ExtractJWT.fromExtractors([cookiesExtractor]), //consulto el token de las cookes
+   // //opcion dada en clase
+   // const cookiesExtractor = (req) => {
+   //    //{} no hay cookies != no exista mi cookie
+   //    //si existen cookies, consulte por mi cookie y sino asigno {}
+   //    const headerToken = req.headers ? req.headers.authorization : null;
+   //    const cookiesToken = req.cookies ? req.cookies.jwtCookie : null;
+   //    console.log("token cookie", cookiesToken);
+   //    console.log(headerToken)
+   //    return headerToken || cookiesToken || {};
+   // };
+   // //done es como si fuese un res.status(),el callback de respuesta. 
+   //  //Acá defino qué y en qué ruta voy a utilizar mi estrategia
+   // passport.use('jwt', new JWTStrategy({
+   //    jwtFromRequest: ExtractJWT.fromExtractors([cookiesExtractor]), //consulto el token de las cookes
+   //    secretOrKey: process.env.JWT_SECRET
+   // }, async (jwt_payload, done) => {
+   //    try {
+   //       return done (null, jwt_payload);//retorno contenido del token
+   //    } catch (error) {
+   //       return done(error);
+   //    };
+   // }
+   // ));
+
+   const cookieExtractor = (req) => {
+      const token = req.cookies ? req.cookies.jwtCookie : {}
+      // clg(token)
+      return token
+  }
+
+  const { fromAuthHeaderAsBearerToken } = ExtractJWT
+
+  passport.use('jwt', new JWTStrategy({
+      jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor, fromAuthHeaderAsBearerToken()]),
       secretOrKey: process.env.JWT_SECRET
-   }, async (jwt_payload, done) => {
+  }, async (jwtPayload, done) => {
       try {
-         return done (null, jwt_payload);//retorno contenido del token
+          const user = await userModel.findById(jwtPayload.user._id)
+          if (!user) {
+              return done(null, false)
+          }
+          return done(null, user)
       } catch (error) {
-         return done(error);
-      };
-   }
-   ));
+          logger.error(error)
+          return done(error)
+      }
+  }))
 
     passport.use('register', new LocalStrategy(
          {passReqToCallback: true, usernameField:'email'}, async (req, username, password, done) => {

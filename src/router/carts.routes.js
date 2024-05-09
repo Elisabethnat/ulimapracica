@@ -6,19 +6,20 @@ const cartRouter = Router();
 //Get Carts 
 cartRouter.get('/', cartsController.getCarts);
 //Get cart by id
-cartRouter.get('/:cid', cartsController.getCart);
+cartRouter.get('/:cid', cartsController.getCartById);
 // Create Carts 
 cartRouter.post('/', cartsController.postCart);
-//Finalizar compra
-cartRouter.post('/:cid/purchase', passportError('jwt'), authorization('user'), cartsController.purchaseCart);
-//add product to cart (agrega el producto ok y actualiza si existe)
-cartRouter.put('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.putProductsToCart);
+//add product to cart 
+cartRouter.post('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.addProductToCart);
 //update cart by id 
 cartRouter.put('/:cid', passportError('jwt'), authorization('user'),cartsController.updateProductToCart);
-// delete pid from cart 
+//Modify Qty from cart
+cartRouter.put('/:cid/product/:pid', passportError('jwt'), authorization('user'), cartsController.modifyProductQty);
+//Remove pid from cart 
 cartRouter.delete('/:cid/product/:pid', passportError('jwt'), authorization('user'),cartsController.deleteProductCart);
-//Delete all prodcuts from cart
+//Empty cart
 cartRouter.delete('/:id', passportError('jwt'), authorization('user'),cartsController.deleteProductsCart);
+//Finalizar compra
+cartRouter.post('/:cid', passportError('jwt'), authorization('user'), cartsController.purchaseCart);
 
 export default cartRouter;
-

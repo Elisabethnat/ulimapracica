@@ -1,6 +1,8 @@
 import cartModel from '../models/carts.models.js';
-import { logger } from '../utils/logger.js';
 import 'dotenv/config.js';
+import { logger } from '../utils/logger.js';
+import productsModel from '../models/products.model.js';
+import { userModel } from '../models/users.model.js';
 // import productsModel from '../models/products.model.js';
 
 //Get Carts 
@@ -15,20 +17,7 @@ const getCarts = async (req, res) => {
         res.status(400).send({error: `Error al consultar carrito: ${error}`});
     };
 };
-//Get cart by id
-const getCart = async (req, res) => {
-    const { cid } = req.params;
-    try{
-        const cart = await cartModel.findById(cid);
-        cart 
-            ? res.status(200).send({resultado: 'OK', messag:cart})
-            : res.status(404).send({resultado:'Not Found', message: cart});
 
-    }catch (error){
-		logger.error(`[ERROR] - Date: ${new Date().toLocaleTimeString()} - ${error.message}`);
-        res.status(400).send ({ error:`Error al consultar carritos: ${error}`});
-    };
-};
 // Create Carts
 const postCart = async (req, res) => {
 	const respuesta = await cartModel.create({}); //o const response = await cartModel.create(req.body)	
@@ -40,61 +29,110 @@ const postCart = async (req, res) => {
         res.status(400).send ({ error:`Error al crear carritos: ${error}`});
     };
 };
-//put product to cart (agrega el producto ok y actualiza si existe)
-const putProductsToCart = async (req, res) => {
-    const { cid, pid } = req.params;
-    const { quantity } = req.body;
 
+//GET CART BY ID
+const getCartById = async (req, res) => {
     try {
-        // Verificar si el carrito existe
-        const cart = await cartModel.findByIdAndUpdate(cid);
-        !cart ?  res.status(404).send({ resultado: 'Cart not found' }) : ""
-        
-        // Verificar si existe el producto
-        const prodIndex = cart.products.findIndex(prod => prod.id_prod.toString() === pid);
+        const { cid } = req.params;
+        const cart = await cartModel.findById(cid);
+        cart ? res.status(200).send({ resultado: 'OK', message: cart })
+            : res.status(404).send({ error: `Carrito no encontrado: ${error}` });
+    }
+    catch (error) {
+        res.status(400).send({ error: `Error al obtener carrito: ${error}` });
+    }
+}
 
-        prodIndex !== -1 ?
-            // Si el producto ya existe, actualiza la cantidad
-            cart.products[prodIndex].quantity += Number(quantity):
-            // Si el producto no existe, agrega uno nuevo al carrito
-            cart.products.push({ id_prod: pid, quantity });
+//ADD PRODUCT TO CART
+const addProductToCart = async (req, res) => {
+    try {
+        const { quantity } = req.body;
+        const { cid, pid } = req.params;
 
-        // Guardar el carrito actualizado en la base de datos
+        const cart = await cartModel.findById(cid);
+        const product = await productsModel.findById(pid);
+        const findIndex = cart.products.findIndex(product => product.id_prod._id.equals(pid));
+
+        //Check if product exists in cart
+        if (findIndex !== -1) {
+            //Check if stock is enough
+            if (product.stock < cart.products[findIndex].quantity + quantity) {
+                res.status(400).send({ error: `Error al agregar producto al carrito: No hay stock suficiente, solo tenemos ${product.stock} unidad(es) disponible(s)` });
+                return;
+            }
+            cart.products[findIndex].quantity += quantity;
+        } else {
+            if (product.stock < quantity) {
+                res.status(400).send({ error: `Error al agregar producto al carrito: No hay stock suficiente, solo tenemos ${product.stock} unidad(es) disponible(s)` });
+                return;
+            }
+            cart.products.push({ id_prod: pid, quantity: quantity });
+        }
+
         await cart.save();
-
         res.status(200).send({ resultado: 'OK', message: cart });
-    } catch (error) {
-		logger.error(`[ERROR] - Date: ${new Date().toLocaleTimeString()} - ${error.message}`);
-        res.status(400).send({ error: `Error al agregar productos: ${error}` });
+    }
+    catch (error) {
+        res.status(400).send({ error: `Error al agregar producto al carrito: ${error}` });
     };
 };
+
 //update cart by id 
 const updateProductToCart = async (req, res) => {
-    const { cid } = req.params;
-	const { updateProducts } = req.body;
+    try {
+        const { cid } = req.params;
+        const updateProducts = req.body;
+        const cart = await cartModel.findById(cid);
 
-	try {
-		const cart = await cartModel.findById(cid);
-		updateProducts.forEach(prod => {
-			const productExists = cart.products.find(cartProd => cartProd.id_prod.toString() == prod.id_prod);
-			productExists ?	productExists.quantity += prod.quantity
-                          : cart.products.push(prod);			
-		}); 
-		await cart.save();
-		cart
-			? res.status(200).send({ resultado: 'OK', message: cart })
-			: res.status(404).send({ resultado: 'Not Found', message: cart });
-	} catch (error) {
-		logger.error(`[ERROR] - Date: ${new Date().toLocaleTimeString()} - ${error.message}`);
-		res.status(400).send({ error: `Error al agregar productos: ${error}` });
-	};
-};
+        updateProducts.forEach(product => {
+            const productExist = cart.products.find(prod => prod.id_prod._id.equals(product.id_prod));
+            if (productExist) {
+                productExist.quantity += product.quantity; //Elijo sumar la cantidad del producto en vez de reemplazarla
+            } else {
+                cart.products.push(product);
+            }
+        });
+        await cart.save();
+
+        cart ?
+            res.status(200).send({ resultado: 'OK', message: cart })
+            : res.status(404).send({ error: `Carrito no encontrado: ${error}` });
+    }
+    catch (error) {
+        res.status(400).send({ error: `Error al modificar carrito: ${error}` });
+    }
+}
+
+//MODIFY QTY OF PRODUCT IN CART
+const modifyProductQty = async (req, res) => {
+    try {
+        const { quantity } = req.body;
+        const { cid, pid } = req.params;
+
+        const cart = await cartModel.findById(cid);
+        const findIndex = cart.products.findIndex(product => product.id_prod._id.equals(pid));
+
+        if (findIndex !== -1) {
+            cart.products[findIndex].quantity = quantity;
+        } else {
+            cart.products.push({ id_prod: pid, quantity: quantity });
+        }
+
+        await cart.save();
+        cart ? res.status(200).send({ resultado: 'OK', message: cart })
+            : res.status(404).send({ error: `Carrito no encontrado: ${error}` });
+    }
+    catch (error) {
+        res.status(400).send({ error: `Error al agregar producto al carrito: ${error}` });
+    }
+}
+
 //finalizar compra
 const purchaseCart = async (req, res) => {
 	const { cid } = req.params;
 	try {
 		const cart = await cartModel.findById(cid);
-		const products = await productModel.find();
+		const products = await productsModel.find();
 
 		if (cart) {
 			const user = await userModel.find({ cart: cart._id });
@@ -111,14 +149,14 @@ const purchaseCart = async (req, res) => {
 				}
 			});
 			// Verificar si el usuario es premium
-			if (user[0].role === 'premium') {
+			if (user[0].rol === 'premium') {
 				// Aplicar un descuento del 15% si el usuario es premium
 				amount = amount * DESCUENTO;
 			}
 			console.log(purchaseItems);
 			await cartModel.findByIdAndUpdate(cid, { products: [] });
 			res.redirect(
-				`http://localhost:8080/api/tickets/create?amount=${amount}&email=${email}`
+				`http://localhost:3000/api/tickets/create?amount=${amount}&email=${email}`
 			);
 		} else {
 			res.status(404).send({ resultado: 'Not Found', message: cart });
@@ -129,7 +167,7 @@ const purchaseCart = async (req, res) => {
 	}
 };
 
-// delete pid from cart
+//Delete pid from cart
 const deleteProductCart = async (req, res) => {
     const { cid, pid } = req.params;
 
@@ -176,13 +214,14 @@ const deleteProductsCart = async (req, res) => {
 
 const cartsController = {
 	getCarts,
-	getCart,
+	getCartById,
 	postCart,
-	putProductsToCart,
+	addProductToCart,
 	updateProductToCart,
 	deleteProductCart,
 	deleteProductsCart,
     purchaseCart,
+	modifyProductQty
 };
 
 export default cartsController;

@@ -22,17 +22,17 @@ export const passportError = (strategy) => {
 export const authorization = (rol) => {
     return async (req, res, next) => {
        
-        //se vuelve a consultar si el user exists porque el token puede expirar, el user borrar el historial.
-        if(!req.user) {
-            return res.status(401).send ({error:'Usuario no autorizado'});
-        };
-        
-        if(req.user.user.rol.toLowerCase() != rol.toLowerCase()){//se verifica el rol del usuario es disitnto al ingresado por parametro
-            return res.status(403).send ({error: 'Usuario sin los privilegios necesarios'});
-        };
-        console.log(req.user)
-        
-        next();
+        // Se vuelve a consultar si el user existe porque el token puede expirar o el user borrar el historial.
+        if (!req.user) {
+            return res.status(401).send({ error: 'Usuario no autorizado' });
+        }
 
+        // Verifica si el rol del usuario es diferente al ingresado por parámetro
+        if (req.user.rol.toLowerCase() !== rol.toLowerCase()) {
+            return res.status(403).send({ error: 'Usuario sin los privilegios necesarios' });
+        }
+
+        console.log(req.user);
+        next();
     };
 };

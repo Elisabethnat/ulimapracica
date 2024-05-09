@@ -15,7 +15,7 @@ import { logger, addLogger } from './utils/logger.js';
 // import multer from 'multer';
 // import { userModel } from './models/users.model.js';
 
-const whiteList = ['http://localhost:3000'];
+const whiteList = ['http://localhost:3001'];
 
 const corsOptions = {
     origin: function (origin, callback) {
@@ -29,7 +29,7 @@ const corsOptions = {
 
 const app = express();
 
-const PORT = 4000;
+const PORT = 3000;
 //conexion a atlas
 mongoConnect();
 //Server

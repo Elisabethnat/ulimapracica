@@ -1,10 +1,12 @@
 import 'dotenv/config.js';
 import mongoose from 'mongoose';
+import { logger } from './utils/logger.js';
 
-export default function mongoConnect() {
-    mongoose.connect(process.env.MONGO_URL)
-    .then(async ()=>{
-        console.log("DB conectada");
-    })
-    .catch((e)=> console.log("Error en conecxion a Mongo Atlas", e));
-}
+export default async function mongoConnect() {
+   try {
+      await mongoose.connect(process.env.MONGO_URL);
+      logger.info("DB conectada");
+   } catch (error) {
+      logger.info("Error en conexión a Mongo Atlas", error);
+   };
+};

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import usersController from "../controllers/users.controller.js";
-
-//utilizamos modulo cripto porque es un modulo mas rpido para algo simple (no usamos JWT)
+import { authorization, passportError } from "../utils/messageErrors.js";
+import upload from "../middlewares/upload.multer.js";
 
 const userRouter = Router();
 
@@ -9,10 +9,13 @@ const userRouter = Router();
 userRouter.get('/', usersController.userGet);
 userRouter.post('/password-recovery', usersController.userPostRecovPass);
 userRouter.get('/reset-password/:token', usersController.userPostResetPass);
-userRouter.post('/:uid/documents', usersController.userDocuments);
+userRouter.post('/:uid/documents', upload.array('docs', 10), usersController.uploadFile);
+userRouter.delete('/:uid', passportError('jwt'), authorization('user'), usersController.deleteUserById);
+userRouter.delete('/', passportError('jwt'), authorization('Admin'), usersController.deleteInactiveUser);
 
 export default userRouter;
 
+//utilizamos modulo cripto porque es un modulo mas rpido para algo simple (no usamos JWT)
 // import { createHash  } from "../utils/bcrypt.js";
 //   const { first_name, last_name, age, password, email} = req.body;
 

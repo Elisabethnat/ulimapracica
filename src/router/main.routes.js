@@ -16,7 +16,7 @@ router.use('/api/products', productRouter); //aca se enlaza la ruta al use
 router.use('/api/carts', cartRouter);
 router.use('/api/users', userRouter);
 router.use('/api/message', messageRouter );
-router.use('/api/sessions', sessionRouter );
+router.use('/api/session', sessionRouter );
 router.use('/api/profile', profileRouter);
 router.use('/api/tickets',ticketRouter);
 router.use('/api/logger', loggerRouter);
